@@ -1,0 +1,7 @@
+# Mac OS positioning files
+.ds_*
+.Ds_*
+.DS_*
+
+# Binary output files
+*.out
