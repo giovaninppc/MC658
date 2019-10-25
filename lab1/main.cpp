@@ -2,6 +2,8 @@
 // RA168609
 // Lab1 MC658 2S2019 - FKM
 
+// Using GUROBI.c++ 8.11
+
 // * Problema da formacao de equipes *
 //
 // Seja
@@ -19,9 +21,9 @@
 // |S_k| -> ∑ x{ij}{k} >= a, ∀ {i,j}  - Tamanhos limites dos grupos (max e min)
 //
 // ∑ x{ii}{k} = 1, ∀ k                - Cada vertice (pessoa) pertence a 1 grupo apenas
-//
+//å
 // y{ij} <= (x{ii}{k} + x{jj}{k})/2   - Se 2 pessoas, i e j, estão no grupo k
-// y{ij} >= (x{ii}{k} + x{jj}{k} - 1)/2 a aresta {i,j} pertence à solução
+// y{ij} >= (x{ii}{k} + x{jj}{k} - 1)/2     a aresta {i,j} pertence à solução
 //
 //
 
