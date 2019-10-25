@@ -27,7 +27,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "gurobi_c++.h"
+#include "/Library/gurobi811/mac64/include/gurobi_c++.h" // GUROBI install path
 using namespace std;
 
 // Functions
@@ -68,7 +68,76 @@ int main(int argc, char *argv[]) {
 
     file.close();
 
-    // Use the graph information
+    // Create PLI Program
+    GRBVar x[employeeAmount][employeeAmount][numberOfGroups];
+    GRBVar y[employeeAmount][employeeAmount];
+
+    try {
+        GRBEnv env = GRBEnv(true);
+        env.set("LogFile", "mip1.log");
+        env.start();
+
+        GRBModel model = GRBModel(env);
+
+        // Create GRB variables
+        for (int i  = 0; i < employeeAmount; i++) {
+            for (int j = 0; j < employeeAmount; j++) {
+
+                for (int k = 0; k < numberOfGroups; k++) {
+                    x[i][j][k] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "x-" + std::to_string(i) + "-" + std::to_string(j) + "-" + std::to_string(k));
+                }
+
+                y[i][j] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "y-" + std::to_string(i) + "-" + std::to_string(j));
+            }
+        }
+
+        // Set objective
+        GRBVar objective;
+        for (int i  = 0; i < employeeAmount; i++) {
+            for (int j = 0; j < employeeAmount; j++) {
+                objective = objective + ( y[i][j] * matrix[i][j] );
+            }
+        }
+        model.setObjective(objective, GRB_MAXIMIZE);
+
+        // Add constraints
+        for (int k = 0; k < numberOfGroups; k++) {
+            GRBVar limitExpression;
+
+            for (int i  = 0; i < employeeAmount; i++) {
+                for (int j = 0; j < employeeAmount; j++) {
+                    limitExpression = limitExpression + x[i][j][k];
+                }
+            }
+
+            model.addConstr(limitExpression >= min, "minimum group size for group " + std::to_string(k));
+            model.addConstr(limitExpression <= max, "maximum group size for group " + std::to_string(k));
+        }
+
+        for (int i = 0; i < employeeAmount; i++) {
+            GRBVar groupBelong;
+            for (int k = 0; k < numberOfGroups; k++) {
+                groupBelong = groupBelong + x[i][i][k];
+            }
+
+            model.addConstr(groupBelong = 1, "Person " + std::to_string(i) + " is in exactly 1 group");
+        }
+
+        for (int i = 0; i < employeeAmount; i++) {
+            for (int j = 0; j < employeeAmount; j++) {
+                for (int k = 0; k < numberOfGroups; k++) {
+                    model.addConstr(y[i][j] <= (x[i][i][k] + x[j][j][k]    )/2, "if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
+                    model.addConstr(y[i][j] >= (x[i][i][k] + x[j][j][k] - 1)/2, "if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
+                }
+            }
+        }
+
+        // Optimize model
+        model.optimize();
+
+    } catch (exception e) {
+        cout << "Error during optimization" << endl;
+    }
 
     return 0;
 }
