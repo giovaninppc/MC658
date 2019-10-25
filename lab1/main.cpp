@@ -92,35 +92,37 @@ int main(int argc, char *argv[]) {
         }
 
         // Set objective
-        GRBVar objective;
+        LinExpr objective[employeeAmount * employeeAmount];
+        int counter = 0;
         for (int i  = 0; i < employeeAmount; i++) {
             for (int j = 0; j < employeeAmount; j++) {
-                objective = objective + ( y[i][j] * matrix[i][j] );
+                objective[counter++] = LinExpr(y[i][j] * matrix[i][j]);
             }
         }
-        model.setObjective(objective, GRB_MAXIMIZE);
+        model.setObjective(quicksum(objective), GRB_MAXIMIZE);
 
         // Add constraints
         for (int k = 0; k < numberOfGroups; k++) {
-            GRBVar limitExpression;
+            LinExpr limitExpression[employeeAmount * employeeAmount];
+            counter = 0;
 
             for (int i  = 0; i < employeeAmount; i++) {
                 for (int j = 0; j < employeeAmount; j++) {
-                    limitExpression = limitExpression + x[i][j][k];
+                    limitExpression[counter++] = LinExpr(limitExpression + x[i][j][k]);
                 }
             }
 
-            model.addConstr(limitExpression >= min, "minimum group size for group " + std::to_string(k));
-            model.addConstr(limitExpression <= max, "maximum group size for group " + std::to_string(k));
+            model.addConstr(quicksum(limitExpression) >= min, "minimum group size for group " + std::to_string(k));
+            model.addConstr(quicksum(limitExpression) <= max, "maximum group size for group " + std::to_string(k));
         }
 
         for (int i = 0; i < employeeAmount; i++) {
-            GRBVar groupBelong;
+            LinExpr groupBelong[numberOfGroups];
             for (int k = 0; k < numberOfGroups; k++) {
-                groupBelong = groupBelong + x[i][i][k];
+                groupBelong[k] = LinExpr(groupBelong + x[i][i][k]);
             }
 
-            model.addConstr(groupBelong = 1, "Person " + std::to_string(i) + " is in exactly 1 group");
+            model.addConstr(quicksum(groupBelong) = 1, "Person " + std::to_string(i) + " is in exactly 1 group");
         }
 
         for (int i = 0; i < employeeAmount; i++) {
