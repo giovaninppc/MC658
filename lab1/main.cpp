@@ -126,14 +126,27 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < employeeAmount; i++) {
             for (int j = 0; j < employeeAmount; j++) {
                 for (int k = 0; k < numberOfGroups; k++) {
-                    model.addConstr(y[i][j] <= (x[i][i][k] + x[j][j][k]    )/2, "if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
-                    model.addConstr(y[i][j] >= (x[i][i][k] + x[j][j][k] - 1)/2, "if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
+                    model.addConstr(y[i][j] <= (x[i][i][k] + x[j][j][k]    )/2,  "if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
+                    model.addConstr(y[i][j] >= (x[i][i][k] + x[j][j][k] - 1)/2, "2if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
                 }
             }
         }
 
         // Optimize model
         model.optimize();
+
+        // Print output
+        cout << model.get(GRB_DoubleAttr_ObjVal) << endl;
+
+        for (int i = 0; i < employeeAmount; i++) {
+            int k = 0;
+
+            for (k = 0; k < numberOfGroups; k++) {
+                if (y[i][i][k].get(GRB_DoubleAttr_X) == 1) { break; }
+            }
+
+            cout << "v" << i << " " << k << endl;
+        }
 
     } catch (exception e) {
         cout << "Error during optimization" << endl;
@@ -144,7 +157,7 @@ int main(int argc, char *argv[]) {
 
 void checkOpeningParameters(int argc) {
     if (argc < 3) {
-        printf("Not enough parameters. Expected: ./lab <graph> <number of groups>\n");
+        cout << "Not enough parameters. Expected: ./lab <graph> <number of groups>" << endl;
         exit(1);
     }
 }
