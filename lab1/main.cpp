@@ -92,37 +92,37 @@ int main(int argc, char *argv[]) {
         }
 
         // Set objective
-        LinExpr objective[employeeAmount * employeeAmount];
+        GRBLinExpr objective = 0;
         int counter = 0;
         for (int i  = 0; i < employeeAmount; i++) {
             for (int j = 0; j < employeeAmount; j++) {
-                objective[counter++] = LinExpr(y[i][j] * matrix[i][j]);
+                objective += y[i][j] * matrix[i][j];
             }
         }
-        model.setObjective(quicksum(objective), GRB_MAXIMIZE);
+        model.setObjective(objective, GRB_MAXIMIZE);
 
         // Add constraints
         for (int k = 0; k < numberOfGroups; k++) {
-            LinExpr limitExpression[employeeAmount * employeeAmount];
+            GRBLinExpr limitExpression = 0;
             counter = 0;
 
             for (int i  = 0; i < employeeAmount; i++) {
                 for (int j = 0; j < employeeAmount; j++) {
-                    limitExpression[counter++] = LinExpr(limitExpression + x[i][j][k]);
+                    limitExpression += x[i][j][k];
                 }
             }
 
-            model.addConstr(quicksum(limitExpression) >= min, "minimum group size for group " + std::to_string(k));
-            model.addConstr(quicksum(limitExpression) <= max, "maximum group size for group " + std::to_string(k));
+            model.addConstr(limitExpression, GRB_GREATER_EQUAL, min, "minimum group size for group " + std::to_string(k));
+            model.addConstr(limitExpression, GRB_LESS_EQUAL,    max, "maximum group size for group " + std::to_string(k));
         }
 
         for (int i = 0; i < employeeAmount; i++) {
-            LinExpr groupBelong[numberOfGroups];
+            GRBLinExpr groupBelong = 0;
             for (int k = 0; k < numberOfGroups; k++) {
-                groupBelong[k] = LinExpr(groupBelong + x[i][i][k]);
+                groupBelong += x[i][i][k];
             }
 
-            model.addConstr(quicksum(groupBelong) = 1, "Person " + std::to_string(i) + " is in exactly 1 group");
+            model.addConstr(groupBelong, GRB_EQUAL, 1, "Person " + std::to_string(i) + " is in exactly 1 group");
         }
 
         for (int i = 0; i < employeeAmount; i++) {
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
             int k = 0;
 
             for (k = 0; k < numberOfGroups; k++) {
-                if (y[i][i][k].get(GRB_DoubleAttr_X) == 1) { break; }
+                if (x[i][i][k].get(GRB_DoubleAttr_X) > 0) { break; }
             }
 
             cout << "v" << i << " " << k << endl;
