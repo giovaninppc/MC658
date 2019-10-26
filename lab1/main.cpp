@@ -21,7 +21,7 @@
 // |S_k| -> ∑ x{ij}{k} >= a, ∀ {i,j}  - Tamanhos limites dos grupos (max e min)
 //
 // ∑ x{ii}{k} = 1, ∀ k                - Cada vertice (pessoa) pertence a 1 grupo apenas
-//å
+//
 // y{ij} <= (x{ii}{k} + x{jj}{k})/2   - Se 2 pessoas, i e j, estão no grupo k
 // y{ij} >= (x{ii}{k} + x{jj}{k} - 1)/2     a aresta {i,j} pertence à solução
 //
@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
     int numberOfGroups = atoi(argv[2]);
 
     // DEBUG ---
-    cout << "graph: " << graph << "\n";
-    cout << "k: " << numberOfGroups << "\n";
+    // cout << "graph: " << graph << "\n";
+    // cout << "k: " << numberOfGroups << "\n";
     // --------
 
     // Extract graph file information
@@ -57,8 +57,8 @@ int main(int argc, char *argv[]) {
     file >> employeeAmount >> min >> max;
 
     // DEBUG ---
-    cout << n << " " << a << " " << b << "\n";
-    cout << employeeAmount << " " << min << " " << max << "\n";
+    // cout << n << " " << a << " " << b << "\n";
+    // cout << employeeAmount << " " << min << " " << max << "\n";
     // --------
 
     int matrix[employeeAmount][employeeAmount];
@@ -85,10 +85,10 @@ int main(int argc, char *argv[]) {
             for (int j = 0; j < employeeAmount; j++) {
 
                 for (int k = 0; k < numberOfGroups; k++) {
-                    x[i][j][k] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "x-" + std::to_string(i) + "-" + std::to_string(j) + "-" + std::to_string(k));
+                    x[i][j][k] = model.addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, "x-" + std::to_string(i) + "-" + std::to_string(j) + "-" + std::to_string(k));
                 }
 
-                y[i][j] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "y-" + std::to_string(i) + "-" + std::to_string(j));
+                y[i][j] = model.addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, "y-" + std::to_string(i) + "-" + std::to_string(j));
             }
         }
 
@@ -145,10 +145,11 @@ int main(int argc, char *argv[]) {
             int k = 0;
 
             for (k = 0; k < numberOfGroups; k++) {
+                // printf("%f ", (x[i][i][k].get(GRB_DoubleAttr_X)));
                 if (x[i][i][k].get(GRB_DoubleAttr_X) > 0) { break; }
             }
 
-            cout << "v" << i << " " << k << endl;
+            cout << "v " << i << " " << k << endl;
         }
 
     } catch (exception e) {
