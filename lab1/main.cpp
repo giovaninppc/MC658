@@ -29,7 +29,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "/Library/gurobi811/mac64/include/gurobi_c++.h" // GUROBI install path
+#include "gurobi_c++.h"
 using namespace std;
 
 // Functions
@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
     int numberOfGroups = atoi(argv[2]);
 
     // DEBUG ---
-    // cout << "graph: " << graph << "\n";
-    // cout << "k: " << numberOfGroups << "\n";
+    cout << "graph: " << graph << "\n";
+    cout << "k: " << numberOfGroups << "\n";
     // --------
 
     // Extract graph file information
@@ -57,8 +57,8 @@ int main(int argc, char *argv[]) {
     file >> employeeAmount >> min >> max;
 
     // DEBUG ---
-    // cout << n << " " << a << " " << b << "\n";
-    // cout << employeeAmount << " " << min << " " << max << "\n";
+    cout << n << " " << a << " " << b << "\n";
+    cout << employeeAmount << " " << min << " " << max << "\n";
     // --------
 
     int matrix[employeeAmount][employeeAmount];
@@ -76,7 +76,6 @@ int main(int argc, char *argv[]) {
 
     try {
         GRBEnv env = GRBEnv(true);
-        env.set("LogFile", "mip1.log");
         env.start();
 
         GRBModel model = GRBModel(env);
@@ -93,7 +92,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // Set objective
+        // Set objective - Maximize relation values
         GRBLinExpr objective = 0;
         int counter = 0;
         for (int i  = 0; i < employeeAmount; i++) {
