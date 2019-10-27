@@ -8,7 +8,8 @@
 //
 // Seja
 // x{ij}{k} variavel que indica que os funcionarios i e j estão na equipe k
-// y{ij} indica se a aresta {i,j} pertence à solução
+// x{ii}{k} == 1, indica que o funcionário i está na equipe k
+// x{ij}{k} == 1, para algum k, indica que aresta {i,j} pertence à solução
 // v(i,j) valor da aresta {i,j}
 //
 // MAXIMIZAR
@@ -72,7 +73,6 @@ int main(int argc, char *argv[]) {
 
     // Create PLI Program
     GRBVar x[employeeAmount][employeeAmount][numberOfGroups];
-    GRBVar y[employeeAmount][employeeAmount];
 
     try {
         GRBEnv env = GRBEnv(true);
@@ -85,19 +85,19 @@ int main(int argc, char *argv[]) {
             for (int j = 0; j < employeeAmount; j++) {
 
                 for (int k = 0; k < numberOfGroups; k++) {
-                    x[i][j][k] = model.addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, "x-" + std::to_string(i) + "-" + std::to_string(j) + "-" + std::to_string(k));
+                    x[i][j][k] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "x-" + std::to_string(i) + "-" + std::to_string(j) + "-" + std::to_string(k));
                 }
 
-                y[i][j] = model.addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, "y-" + std::to_string(i) + "-" + std::to_string(j));
             }
         }
 
         // Set objective - Maximize relation values
         GRBLinExpr objective = 0;
-        int counter = 0;
         for (int i  = 0; i < employeeAmount; i++) {
             for (int j = 0; j < employeeAmount; j++) {
-                objective += y[i][j] * matrix[i][j];
+                for (int k = 0; k < numberOfGroups; k++) {
+                    objective += x[i][j][k] * matrix[i][j];
+                }
             }
         }
         model.setObjective(objective, GRB_MAXIMIZE);
@@ -105,12 +105,9 @@ int main(int argc, char *argv[]) {
         // Add constraints
         for (int k = 0; k < numberOfGroups; k++) {
             GRBLinExpr limitExpression = 0;
-            counter = 0;
 
             for (int i  = 0; i < employeeAmount; i++) {
-                for (int j = 0; j < employeeAmount; j++) {
-                    limitExpression += x[i][j][k];
-                }
+                limitExpression += x[i][i][k];
             }
 
             model.addConstr(limitExpression, GRB_GREATER_EQUAL, min, "minimum group size for group " + std::to_string(k));
@@ -129,8 +126,8 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < employeeAmount; i++) {
             for (int j = 0; j < employeeAmount; j++) {
                 for (int k = 0; k < numberOfGroups; k++) {
-                    model.addConstr(y[i][j] <= (x[i][i][k] + x[j][j][k]    )/2,  "if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
-                    model.addConstr(y[i][j] >= (x[i][i][k] + x[j][j][k] - 1)/2, "2if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
+                    model.addConstr(x[i][j][k] <= (x[i][i][k] + x[j][j][k]    )/2,  "if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
+                    model.addConstr(x[i][j][k] >= (x[i][i][k] + x[j][j][k] - 1)/2, "2if " + std::to_string(i) + " and " + std::to_string(j) + "are in the same group " + std::to_string(k));
                 }
             }
         }
@@ -149,7 +146,7 @@ int main(int argc, char *argv[]) {
                 if (x[i][i][k].get(GRB_DoubleAttr_X) > 0) { break; }
             }
 
-            cout << "v " << i << " " << k << endl;
+            cout << "v" << i << " " << k << endl;
         }
 
     } catch (exception e) {
