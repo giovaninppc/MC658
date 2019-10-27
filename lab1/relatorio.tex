@@ -1,0 +1,111 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage[portuges,brazil]{babel}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{siunitx}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage[toc,page]{appendix}
+\usepackage[utf8]{inputenc}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Lab 1: Problema da Formação de Equipes\\
+\large .\\
+\large MC658 - Projeto e Análise de Algoritmos III 2S2019\\
+\large Professor: Flávio Keidi Miyazawa}
+
+\newcommand{\email}[1]{\href{mailto:#1}{#1}}
+
+\author{
+    \IEEEauthorblockN{Giovani Nascimento Pereira}
+    \IEEEauthorblockA{
+    \email{giovani.x.pereira@gmail.com} \\
+    168609
+    }
+}
+
+\maketitle
+
+\section{Definição do problema}
+
+   Dado um conjunto $P$ de pessoas de tamanho $n$, onde cada pessoa tem um nível de similaridade com cada outra pessoa do grupo.
+   Queremos montar um número $n$ de grupos onde seja minimizado o nível de dissimilaridade total.
+
+
+\section {Resolução}
+
+   Seja $x_{ij}^{k}$, variável que indica que os funcionários $i$ e $j$ estão na equipe $k$,
+   onde $x_{ij}^{k} \in \{0,1\}$.
+
+   Assim, $x_{ii}^{k}$ indica que o funcionário $i$ está na equipe $k$.
+
+   Vamos chamar de $S_k$ o conjunto de todas as pessoas que pertencem ao grupo $k$.
+
+   Temos uma matriz de relacionamentos $A$, onde $A_{ij}$ indica o nível de similaridade das pessoas envolvidas
+   e $A_{ij} \in \{-1,0,1\}$, onde é $0$ se $i = j$, $1$ se os funcionários têm similaridade
+   e $-1$ se têm dissimilaridade.
+
+   Temos também $a$ e $b$ que indicam respectivamente os tamanhos mínimo e máximo que os grupos de pessoas podem assumir.
+
+   Queremos minimizar o nível de dissimilaridade dentro de um mesmo grupo.
+
+   Note que, se $x_{ij}^{k} = 1$, para algum $k$,
+   indica que a entrada $A_{ij}$, que é o nível de similaridade entre $i$ e $j$, pertence a solução.
+
+   Como vamos diminuir o nível de dissimilaridade, queremos que as arestas que pertencem à solução sejam as maiores possíveis.
+
+\newpage
+\section {Formulação}
+
+   Maximizar,
+
+   \begin{equation}
+       \Sigma_{(i,j,k)} x_{ij}^{k} * A_{ij}
+   \label{obj}
+   \end{equation}
+
+   Sujeito a,
+
+   \begin{equation}
+       |S_k| \leq b \rightarrow \Sigma_{i \in P} x_{ii}^{k} \leq b, \forall k
+   \label{min-group-size}
+   \end{equation}
+
+   \begin{equation}
+       |S_k| \geq a \rightarrow \Sigma_{i \in P} x_{ii}^{k} \geq a, \forall k
+   \label{max-group-size}
+   \end{equation}
+
+   \begin{equation}
+       \Sigma x_{ii}^{k} = 1, \forall k
+   \label{one-group-per-person}
+   \end{equation}
+
+   \begin{equation}
+       x_{ij}^{k} \leq (x_{ii}^{k} + x_{jj}^{k})/2
+   \label{edge1}
+   \end{equation}
+
+   \begin{equation}
+       x_{ij}^{k} \geq (x_{ii}^{k} + x_{jj}^{k} -1)/2
+   \label{edge2}
+   \end{equation}
+
+
+   Onde, \ref{obj} é nossa função objetivo de maximização e
+
+   \begin{itemize}
+       \item \ref{min-group-size} define o tamanho mínimo de um grupo,
+       \item \ref{max-group-size} define o tamanho máximo de um grupo,
+       \item \ref{one-group-per-person}, define que uma pessoa pode estar alocada em apenas 1 grupo,
+       \item \ref{edge1} e \ref{edge2} forçam que $x_{ij}^{k}$ seja 1 se $i$ e $j$ estão no grupo k, e $0$ caso contrário, indicando que o relacionamento de $i$ e $j$ pertence à solução.
+   \end{itemize}
+
+\end{document}
