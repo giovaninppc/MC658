@@ -13,7 +13,7 @@
 // v(i,j) valor da aresta {i,j}
 //
 // MAXIMIZAR
-// ∑ y{ij} * v(i,j)
+// ∑ x{ij} * v(i,j)
 //
 //
 // Sujeito a,
