@@ -53,7 +53,7 @@
         \item $c_a$ custo de transporte de $1$ unidade de peso no arco $a$
     \end{itemize}
 
-    O problema consiste eem encontrar qual a rota que trará o maior lucro ao final. Ou seja, maximizar a relação de lucro obtido com o transporte dos itens menos o gasto com o transporte.
+    O problema consiste em encontrar qual a rota que trará o maior lucro ao final. Ou seja, maximizar a relação de lucro obtido com o transporte dos itens menos o gasto com o transporte.
 
     Se tomarmos um arco $a$, onde o caminhão carrega itens $S_a \in V$, o custo de transporta em $a$ será:
 
@@ -63,18 +63,72 @@
 
     Ou seja, o peso total do caminhão (peso base $P$ mais peso dos itens sendo transportados) multiplicado pelo custo $c_a$.
 
-    Então podemos resumir, que dado um caminho $\Rho$ de $s$ a $t$:
+    Então podemos resumir, que dado um caminho $\rho$ de $s$ a $t$:
 
     \begin{equation}
-        valor(\Rho) = \Sigma_{v \in V(\Rho)} - \Sigma_{(u,v) \in A(\Rho)} (P + w(\Rho, u))c_{(u,v)}
+        valor(\rho) = \Sigma_{v \in V(\rho)} - \Sigma_{(u,v) \in A(\rho)} (P + w(\rho, u))c_{(u,v)}
     \end{equation}
-
-\section {Resolução}
-
 
 \newpage
 \section {Formulação}
 
+    Sejam $x_i \in \{0, 1\}$ variável indicadora que diz que o item da cidade $i$ pertence à solução, e $y_{i,j} \in \{0, 1\}$ variável indicadora que diz que a aresta $(i,j)$ pertence à solução.
+
+    Podemos definir a formulação do problema como otimizar a função:
+
+
+    Sujeita a:
+
+    \begin{equation}
+        \Sigma_{i \in V} y_{i,a} \leq 1, \forall a \in V - \{s,t\}
+        \label{1}
+    \end{equation}
+
+    \begin{equation}
+        \Sigma_{i \in V} y_{i,a} \leq 1, \forall a \in V - \{s,t\}
+        \label{2}
+    \end{equation}
+
+    \begin{equation}
+        \Sigma_{i \in V} y_{s,i} = 1
+        \label{s-out}
+    \end{equation}
+
+    \begin{equation}
+        \Sigma_{i \in V} y_{i,s} = 0
+        \label{s-in}
+    \end{equation}
+
+    \begin{equation}
+        \Sigma_{i \in V} y_{t,i} = 0
+        \label{t-out}
+    \end{equation}
+
+    \begin{equation}
+        \Sigma_{i \in V} y_{i,t} = 1
+        \label{t-in}
+    \end{equation}
+
+    \begin{equation}
+        \Sigma_{i \in V} y_{i,a} = \Sigma_{i \in V} y_{a,1}, \forall a \in V - \{s,t\}
+        \label{7}
+    \end{equation}
+
+    \begin{equation}
+        x_i = \Sigma_{i \in V} y_{a,i}, \forall a \in V - \{s,t\}
+        \label{belong}
+    \end{equation}
+
+    Onde,
+
+    \begin{itemize}
+        \item As restrições \ref{1} e \ref{2} impedem a existência de ciclos no caminho $\rho$ da solução, toda aresta tem no máximo um vértice de entrada e um de saída;
+        \item \ref{s-out} garante que do nó inicial $s$ saia  exatamente 1 aresta, e \ref{s-in} que nenhuma aresta atinja  $s$.
+        \item \ref{t-out} garante que do nó final $t$ não saia  nenhuma aresta, e \ref{t-in} que exatamente 1 aresta incida em $t$.
+        \item \ref{7} garante que a mesma quantidade de arestas incidindo em um vértice esteja saindo dele, e vice-versa. Essa restrição, juntamento com \ref{s-out} e \ref{t-in} garantem a conectividade do grafo da solução de $s$ a $t$, pois G se trata de um grafo direcionado.
+        \item e a restrição \ref{belong} garante que um item $i$ pode estar na solução apenas se existe uma aresta que incide no vértice $i$ e que também está na solução.
+
+    \end{itemize}
 
 
 \end{document}
