@@ -14,7 +14,7 @@ struct Node {
 int nonExistentEdge = -1;
 void checkOpeningParameters(int argc);
 void checkNodeIfValid(int nextNode);
-void printNodeInPath(Node node, double value);
+void printNodeInPath(Node node, double value, double *sum);
 
 int main(int argc, char *argv[]) {
 
@@ -99,7 +99,10 @@ int main(int argc, char *argv[]) {
         // Income value
         GRBLinExpr objective = 0;
         for (int i = 0; i < nnodes; i++) {
-            objective += x[i] * nodes[i].itemValue;
+            objective += x[i] * nodes[i].itemValue;                               // Sum collected items
+            // for (int j = 0; j < nnodes; j++) {
+            //     objective -= y[i][j] * edges[i][j] * (P + (nodes[i].itemWeight)); // Subtract edge transport cost
+            // }
         }
         model.setObjective(objective, GRB_MAXIMIZE);
 
@@ -173,6 +176,7 @@ int main(int argc, char *argv[]) {
         // PATH
         cout << "s" << endl;
         int currentNode = s;
+        double sum = 0;
         while (currentNode != t) {
             int nextNode = nonExistentEdge;
 
@@ -184,11 +188,10 @@ int main(int argc, char *argv[]) {
             }
 
             checkNodeIfValid(nextNode);
-            printNodeInPath(nodes[nextNode], x[nextNode].get(GRB_DoubleAttr_X));
+            printNodeInPath(nodes[nextNode], x[nextNode].get(GRB_DoubleAttr_X), &sum);
 
             currentNode = nextNode;
         }
-
         cout << "t" << endl;
 
     } catch (exception e) {
@@ -212,12 +215,13 @@ void checkNodeIfValid(int nextNode) {
     }
 }
 
-void printNodeInPath(Node node, double value) {
+void printNodeInPath(Node node, double value, double *sum) {
     cout << node.nodename;
 
     if (value > 0) {
-        cout << " coletou " << node.itemValue;
+        *sum += node.itemValue;
+        cout << " coletou";
     }
 
-    cout << endl;
+    cout << " " << *sum << endl;
 }
