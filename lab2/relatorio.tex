@@ -55,87 +55,99 @@
 
     O problema consiste em encontrar qual a rota que trará o maior lucro ao final. Ou seja, maximizar a relação de lucro obtido com o transporte dos itens menos o gasto com o transporte.
 
-    Se tomarmos um arco $a$, onde o caminhão carrega itens $S_a \in V$, o custo de transporta em $a$ será:
+\section {Resolução}
+
+    A maior dificuldade desse problema, é a questão de ordem envolvida para o custo:
+
+    Se fizermos um caminho em vértices $a \rightarrow b \rightarrow c$, onde cada vértice tem um item com valor e peso diferente, e cada aresta também tem um custo de transporte diferente, o valor adquirido ao passar por esse caminho seria o mesmo em qualquer permutação de $a$, $b$, $c$, mas não o custo de transporte.
+
+    Então precisamos de alguma forma indicar que ao chegar no vértice $i$ exista, implicitamente, o peso do caminhão com seus itens ao chegar.
+
+    Vamos tomar uma variável $X_i \in Z$ que acumula o peso do caminhão até o vértice $i$ (note que $X$ não é binária), e uma variável $Y_{i,j} \in \{0,1\}$ que indica que uma aresta $(i,j)$ pertence à solução.
+
+    Podemos descrever $X$ como sendo:
 
     \begin{equation}
-        \text{Custo de transporte em } a = (P + \Sigma_{i \in S_a} w_i) * c_a
+        X_j \geq Y_{i,j} ( w_j + X_i ), \text{ } \forall (i,j) \in A
     \end{equation}
 
-    Ou seja, o peso total do caminhão (peso base $P$ mais peso dos itens sendo transportados) multiplicado pelo custo $c_a$.
+    Ou seja, $X_j$ é maior ou igual à $w_j$ (o peso do seu item) somado à $X_i$, que é o vértice que precede $j$ na solução.
 
-    Então podemos resumir, que dado um caminho $\rho$ de $s$ a $t$:
-
-    \begin{equation}
-        valor(\rho) = \Sigma_{v \in V(\rho)} - \Sigma_{(u,v) \in A(\rho)} (P + w(\rho, u))c_{(u,v)}
-    \end{equation}
+    Pelas restrições do problema, sabemos que a solução consistem em um caminho acíclico, então apenas 1 aresta \textbf{pode} incidir no vértice $j$. Para um $j$ fixo, $\Sigma_{i \in V} Y_{i,j} \leq 1$,
+    e que com isso, o valor de $X_j$ é o valor de $X_{i} + w_{j}$, se $i$ precede $j$ imediatamente no caminho da solução, e $0$ caso contrário.
+\\
 
 \section {Formulação}
 
-    Sejam $x_i \in \{0, 1\}$ variável indicadora que diz que o item da cidade $i$ pertence à solução, e $y_{i,j} \in \{0, 1\}$ variável indicadora que diz que a aresta $(i,j)$ pertence à solução.
+    Sejam $X_i \in Z$ variável que indica o peso total do caminhão ao chegar no vértice $i$, e $Y_{i,j} \in \{0, 1\}$ variável indicadora que diz que a aresta $(i,j)$ pertence à solução.
 
     Podemos definir a formulação do problema como otimizar a função:
 
     \begin{equation}
-        \Sigma_{v \in V(\rho)} - \Sigma_{(u,v) \in A(\rho)} (P + w(\rho, u))c_{(u,v)}
+        \Sigma_{i \in V} (\Sigma_{j \in V} Y_{i,j}) l_i - \Sigma_{(i,j) \in A} (P + X_i)(Y_{i,j})c_{i,j}
     \end{equation}
 
+    Onde $(\Sigma_{j \in V} Y_{i,j}) l_i$ mostra que se uma aresta incide em $i$, então o lucro do item $i$ pertence à solução, menos o custo de transporte em todas as arestas que também pertencem à solução.
 
     Sujeita a:
 
     \begin{equation}
-        \Sigma_{i \in V} y_{i,a} \leq 1, \forall a \in V - \{s,t\}
+        \Sigma_{i \in V} Y_{i,a} \leq 1, \forall a \in V - \{s,t\}
         \label{1}
     \end{equation}
 
     \begin{equation}
-        \Sigma_{i \in V} y_{i,a} \leq 1, \forall a \in V - \{s,t\}
+        \Sigma_{i \in V} Y_{a,i} \leq 1, \forall a \in V - \{s,t\}
         \label{2}
     \end{equation}
 
     \begin{equation}
-        \Sigma_{i \in V} y_{s,i} = 1
-        \label{s-out}
+        \Sigma_{i \in V} Y_{i,a} = \Sigma_{i \in V} Y_{a,i}, \forall a \in V - \{s,t\}
+        \label{no-cicle}
     \end{equation}
 
     \begin{equation}
-        \Sigma_{i \in V} y_{i,s} = 0
-        \label{s-in}
+        \Sigma_{i \in V} Y_{s,i} = 1 \text{  e,  }  \Sigma_{i \in V} Y_{i,s} = 0
+        \label{s}
     \end{equation}
 
     \begin{equation}
-        \Sigma_{i \in V} y_{t,i} = 0
-        \label{t-out}
+        \Sigma_{i \in V} Y_{t,i} = 0 \text{  e,  } \Sigma_{i \in V} Y_{i,t} = 1
+        \label{t}
     \end{equation}
 
     \begin{equation}
-        \Sigma_{i \in V} y_{i,t} = 1
-        \label{t-in}
+        P + \Sigma_{i \in  V} (\Sigma_{j \in V} Y_{j,i}) w_i \leq C
+        \label{capacity}
     \end{equation}
 
     \begin{equation}
-        \Sigma_{i \in V} y_{i,a} = \Sigma_{i \in V} y_{a,1}, \forall a \in V - \{s,t\}
-        \label{7}
-    \end{equation}
-
-    \begin{equation}
-        x_i = \Sigma_{i \in V} y_{a,i}, \forall a \in V - \{s,t\}
+        X_j \geq Y_{i,j} ( w_j + X_i ), \text{ } \forall (i,j) \in A
         \label{belong}
     \end{equation}
 
     \begin{equation}
-        P + \Sigma_{i \in  V}x_i w_i \leq C
-        \label{capacity}
+        X_s = P
+        \label{ps}
     \end{equation}
 
     Onde,
 
     \begin{itemize}
         \item As restrições \ref{1} e \ref{2} impedem a existência de ciclos no caminho $\rho$ da solução, toda aresta tem no máximo um vértice de entrada e um de saída;
-        \item \ref{s-out} garante que do nó inicial $s$ saia  exatamente 1 aresta, e \ref{s-in} que nenhuma aresta atinja  $s$.
-        \item \ref{t-out} garante que do nó final $t$ não saia  nenhuma aresta, e \ref{t-in} que exatamente 1 aresta incida em $t$.
-        \item \ref{7} garante que a mesma quantidade de arestas incidindo em um vértice esteja saindo dele, e vice-versa. Essa restrição, juntamento com \ref{s-out} e \ref{t-in} garantem a conectividade do grafo da solução de $s$ a $t$, pois G se trata de um grafo direcionado.
-        \item a restrição \ref{belong} garante que um item $i$ pode estar na solução apenas se existe uma aresta que incide no vértice $i$ e que também está na solução.
-        \item e \ref{capacity} impede que se aloque mais itens que a capacidade do caminhão permite.
+
+        \item A restrição \ref{no-cicle} garante que se entra uma aresta em um vértice que não seja $s$ ou $t$, também sai uma aresta desse vértice.
+
+        \item \ref{s} garante que do nó inicial $s$ saia  exatamente 1 aresta e que nenhuma aresta atinja  $s$.
+        \item \ref{t} garante que do nó final $t$ não saia nenhuma aresta e que exatamente 1 aresta incida em $t$.
+
+        \item \ref{capacity} impede que se aloque mais itens que a capacidade do caminhão permite.
+
+        \item e a restrição \ref{belong} é a formulação que garante que nosso $X$ trabalhe como um acumulador de pesos, e guarda o valor do peso do caminhão de $s$ até o vértice $j$.
+
+        \item e por fim \ref{ps} faz com que o peso do caminhão comece no primeiro vértice.
+
+    Note que, como \ref{s} e \ref{t} garantem o começo e fim do caminho, junto com a restrição \ref{no-cicle}, elas garantem a conectividade do caminho de $s$ a $t$.
 
     \end{itemize}
 

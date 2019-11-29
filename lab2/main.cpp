@@ -76,8 +76,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Create PLI Env
-    GRBVar x[nnodes];
-    GRBVar y[nnodes][nnodes];
+    GRBVar x[nnodes];          // Weight Accumulator
+    GRBVar y[nnodes][nnodes];  // Edges
 
     try {
         GRBEnv env = GRBEnv(true);
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 
         // ------- Create GRB Variables
         for (int i = 0; i < nnodes; i++) {
-            x[i] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "X-" + std::to_string(i));
+            x[i] = model.addVar(0.0, 1000000, 0.0, GRB_INTEGER, "X-" + std::to_string(i));
 
             for (int j = 0; j < nnodes; j++) {
                 y[i][j] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "Y-" + std::to_string(i) + "-" + std::to_string(j));
@@ -97,11 +97,11 @@ int main(int argc, char *argv[]) {
         // --------- Optimization Rule
 
         // Income value
-        GRBLinExpr objective = 0;
+        GRBQuadExpr objective = 0;
         for (int i = 0; i < nnodes; i++) {
-            objective += x[i] * nodes[i].itemValue;                               // Sum collected items
+            objective += x[i] * nodes[i].itemValue;              // Sum collected items
             for (int j = 0; j < nnodes; j++) {
-                objective -= y[i][j] * edges[i][j] * (P + (nodes[i].itemWeight)); // Subtract edge transport cost
+                objective -= (P + x[i]) * y[i][j] * edges[i][j]; // Subtract edge transport cost
             }
         }
         model.setObjective(objective, GRB_MAXIMIZE);
@@ -155,16 +155,36 @@ int main(int argc, char *argv[]) {
             model.addConstr(inEdges, GRB_EQUAL, outEdges, "Node " + std::to_string(i) + " must have the same number of edges in and out");
         }
 
-        // Items restrictions
-        for (int i = 0; i < nnodes; i++) {
-            GRBLinExpr inEdges = 0;
-            for (int j = 0; j < nnodes; j++) {
-                inEdges += y[i][j];
+        // Weight restrictions - eh aqui q o filho chora e a mae nao ve
+
+        // Xs == P
+        GRBLinExpr XS = x[s];
+        model.addConstr(XS, GRB_EQUAL, P, "Xs is P");
+
+        // Each vertex cost
+        for (int j = 0; j < nnodes; j++) {
+            GRBLinExpr nodeWeight = 0;
+
+            for (int i = 0; i < nnodes; i++) {
+                nodeWeight += (y[i][j] * nodes[j].itemWeight) + x[i];
             }
 
-            GRBLinExpr item = x[i];
-            model.addConstr(item, GRB_LESS_EQUAL, inEdges, "Item" + std::to_string(i) + " CAN only be carried IF it has incident edges on it");
+            GRBLinExpr item = x[j];
+            model.addConstr(item, GRB_GREATER_EQUAL, nodeWeight, "Node" + std::to_string(j) + " has weight bigger than the edge that reaches it");
         }
+
+        // Truck capacity restriction
+        GRBLinExpr itemsBeingCarried = 0;
+        itemsBeingCarried += P;
+        for (int i = 0; i < nnodes; i++) {
+            GRBLinExpr nodeCost = 0;
+            for (int j = 0; j < nnodes; j++) {
+                nodeCost += y[j][i];
+            }
+            nodeCost *= nodes[i].itemWeight;
+            itemsBeingCarried += nodeCost;
+        }
+        model.addConstr(itemsBeingCarried, GRB_LESS_EQUAL, capacity, "Truck capacity");
 
         // -------- Optimize model
         model.optimize();
