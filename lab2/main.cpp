@@ -100,9 +100,9 @@ int main(int argc, char *argv[]) {
         GRBLinExpr objective = 0;
         for (int i = 0; i < nnodes; i++) {
             objective += x[i] * nodes[i].itemValue;                               // Sum collected items
-            // for (int j = 0; j < nnodes; j++) {
-            //     objective -= y[i][j] * edges[i][j] * (P + (nodes[i].itemWeight)); // Subtract edge transport cost
-            // }
+            for (int j = 0; j < nnodes; j++) {
+                objective -= y[i][j] * edges[i][j] * (P + (nodes[i].itemWeight)); // Subtract edge transport cost
+            }
         }
         model.setObjective(objective, GRB_MAXIMIZE);
 

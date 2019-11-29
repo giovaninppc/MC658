@@ -69,12 +69,15 @@
         valor(\rho) = \Sigma_{v \in V(\rho)} - \Sigma_{(u,v) \in A(\rho)} (P + w(\rho, u))c_{(u,v)}
     \end{equation}
 
-\newpage
 \section {Formulação}
 
     Sejam $x_i \in \{0, 1\}$ variável indicadora que diz que o item da cidade $i$ pertence à solução, e $y_{i,j} \in \{0, 1\}$ variável indicadora que diz que a aresta $(i,j)$ pertence à solução.
 
     Podemos definir a formulação do problema como otimizar a função:
+
+    \begin{equation}
+        \Sigma_{v \in V(\rho)} - \Sigma_{(u,v) \in A(\rho)} (P + w(\rho, u))c_{(u,v)}
+    \end{equation}
 
 
     Sujeita a:
@@ -119,6 +122,11 @@
         \label{belong}
     \end{equation}
 
+    \begin{equation}
+        P + \Sigma_{i \in  V}x_i w_i \leq C
+        \label{capacity}
+    \end{equation}
+
     Onde,
 
     \begin{itemize}
@@ -126,7 +134,8 @@
         \item \ref{s-out} garante que do nó inicial $s$ saia  exatamente 1 aresta, e \ref{s-in} que nenhuma aresta atinja  $s$.
         \item \ref{t-out} garante que do nó final $t$ não saia  nenhuma aresta, e \ref{t-in} que exatamente 1 aresta incida em $t$.
         \item \ref{7} garante que a mesma quantidade de arestas incidindo em um vértice esteja saindo dele, e vice-versa. Essa restrição, juntamento com \ref{s-out} e \ref{t-in} garantem a conectividade do grafo da solução de $s$ a $t$, pois G se trata de um grafo direcionado.
-        \item e a restrição \ref{belong} garante que um item $i$ pode estar na solução apenas se existe uma aresta que incide no vértice $i$ e que também está na solução.
+        \item a restrição \ref{belong} garante que um item $i$ pode estar na solução apenas se existe uma aresta que incide no vértice $i$ e que também está na solução.
+        \item e \ref{capacity} impede que se aloque mais itens que a capacidade do caminhão permite.
 
     \end{itemize}
 
