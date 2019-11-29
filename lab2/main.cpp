@@ -14,7 +14,7 @@ struct Node {
 int nonExistentEdge = -1;
 void checkOpeningParameters(int argc);
 void checkNodeIfValid(int nextNode);
-void printNodeInPath(Node node, double value, double *sum);
+void printNodeInPath(Node node, double *sum);
 
 int main(int argc, char *argv[]) {
 
@@ -104,6 +104,7 @@ int main(int argc, char *argv[]) {
                 objective -= (P + x[i]) * y[i][j] * edges[i][j]; // Subtract edge transport cost
             }
         }
+
         model.setObjective(objective, GRB_MAXIMIZE);
 
         // ------ Constraints
@@ -151,7 +152,7 @@ int main(int argc, char *argv[]) {
             }
 
             model.addConstr(outEdges, GRB_LESS_EQUAL, 1,  "Node " + std::to_string(i) + " can have max 1 edge in");
-            model.addConstr(inEdges,  GRB_LESS_EQUAL, 1,  "Node " + std::to_string(i) + " can have max 1 edge out");
+            model.addConstr(inEdges, GRB_LESS_EQUAL, 1,  "Node " + std::to_string(i) + " can have max 1 edge out");
             model.addConstr(inEdges, GRB_EQUAL, outEdges, "Node " + std::to_string(i) + " must have the same number of edges in and out");
         }
 
@@ -164,6 +165,8 @@ int main(int argc, char *argv[]) {
         // Each vertex cost
         for (int j = 0; j < nnodes; j++) {
             GRBLinExpr nodeWeight = 0;
+
+            if (j == s) { continue; }
 
             for (int i = 0; i < nnodes; i++) {
                 nodeWeight += (y[i][j] * nodes[j].itemWeight) + x[i];
@@ -208,7 +211,7 @@ int main(int argc, char *argv[]) {
             }
 
             checkNodeIfValid(nextNode);
-            printNodeInPath(nodes[nextNode], x[nextNode].get(GRB_DoubleAttr_X), &sum);
+            printNodeInPath(nodes[nextNode], &sum);
 
             currentNode = nextNode;
         }
@@ -235,7 +238,7 @@ void checkNodeIfValid(int nextNode) {
     }
 }
 
-void printNodeInPath(Node node, double value, double *sum) {
+void printNodeInPath(Node node, double *sum) {
     cout << node.nodename;
 
     *sum += node.itemValue;
