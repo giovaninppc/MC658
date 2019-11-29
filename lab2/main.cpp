@@ -238,10 +238,8 @@ void checkNodeIfValid(int nextNode) {
 void printNodeInPath(Node node, double value, double *sum) {
     cout << node.nodename;
 
-    if (value > 0) {
-        *sum += node.itemValue;
-        cout << " coletou";
-    }
+    *sum += node.itemValue;
+    cout << " coletou";
 
     cout << " " << *sum << endl;
 }
