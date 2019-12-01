@@ -63,28 +63,26 @@
 
     Então precisamos de alguma forma indicar que ao chegar no vértice $i$ exista, implicitamente, o peso do caminhão com seus itens ao chegar.
 
-    Vamos tomar uma variável $X_i \in Z$ que acumula o peso do caminhão até o vértice $i$ (note que $X$ não é binária), e uma variável $Y_{i,j} \in \{0,1\}$ que indica que uma aresta $(i,j)$ pertence à solução.
+    Vamos tomar uma variável $F_{i,j} \in Z$ que acumula o peso do caminhão até o vértice $i$ (note que $F$ não é binária), e uma variável $Y_{i,j} \in \{0,1\}$ que indica que uma aresta $(i,j)$ pertence à solução, e uma variável $X_i \in \{0,1\}$ que indica que um vértice $i$ pertence à solução.
 
-    Podemos descrever $X$ como sendo:
+    Podemos descrever a relação que define $F$ como sendo:
 
     \begin{equation}
-        X_j \geq Y_{i,j} ( w_j + X_i ), \text{ } \forall (i,j) \in A
+        \Sigma_{j \in V}F_{i,j} = \Sigma_{j \in V} P_{j,i} + X_i w_i \text{ , } \forall i \in V \\ {s,t}
     \end{equation}
 
-    Ou seja, $X_j$ é maior ou igual à $w_j$ (o peso do seu item) somado à $X_i$, que é o vértice que precede $j$ na solução.
+    Ou seja, para um vértice $i$ qualquer, o custo das artestas que saem dele, é igual ao custo das arestas que entram nele somando $Y_i w_i$, que é o custo de transporte naquela aresta, mas apenas se ela pertence à solução.
 
-    Pelas restrições do problema, sabemos que a solução consistem em um caminho acíclico, então apenas 1 aresta \textbf{pode} incidir no vértice $j$. Para um $j$ fixo, $\Sigma_{i \in V} Y_{i,j} \leq 1$,
-    e que com isso, o valor de $X_j$ é o valor de $X_{i} + w_{j}$, se $i$ precede $j$ imediatamente no caminho da solução, e $0$ caso contrário.
 \\
 
 \section {Formulação}
 
-    Sejam $X_i \in Z$ variável que indica o peso total do caminhão ao chegar no vértice $i$, e $Y_{i,j} \in \{0, 1\}$ variável indicadora que diz que a aresta $(i,j)$ pertence à solução.
+    Sejam $F_{i,j} \in Z$ variável que indica o peso total do caminhão na aresta $(i,j)$, $Y_{i,j} \in \{0, 1\}$ variável indicadora que diz que a aresta $(i,j)$ pertence à solução e $X_i \in \{0, 1\}$ variável indicadora que diz que o vértice $i$ pertence à solução.
 
     Podemos definir a formulação do problema como otimizar a função:
 
     \begin{equation}
-        \Sigma_{i \in V} (\Sigma_{j \in V} Y_{i,j}) l_i - \Sigma_{(i,j) \in A} (P + X_i)(Y_{i,j})c_{i,j}
+        \Sigma_{i \in V} (\Sigma_{j \in V} Y_{i,j}) l_i - \Sigma_{(i,j) \in A} F_{i,j}c_{i,j} + P c_{i,j} Y_{i,j}
     \end{equation}
 
     Onde $(\Sigma_{j \in V} Y_{i,j}) l_i$ mostra que se uma aresta incide em $i$, então o lucro do item $i$ pertence à solução, menos o custo de transporte em todas as arestas que também pertencem à solução.
@@ -122,13 +120,18 @@
     \end{equation}
 
     \begin{equation}
-        X_j \geq Y_{i,j} ( w_j + X_i ), \text{ } \forall (i,j) \in A
+        \Sigma_{j \in V}F_{i,j} = \Sigma_{j \in V} P_{j,i} + X_i w_i \text{ , } \forall i \in V \\ {s,t}
         \label{belong}
     \end{equation}
 
     \begin{equation}
-        X_s = P
+        X_s = 0
         \label{ps}
+    \end{equation}
+
+    \begin{equation}
+        X_j = \Sigma_{Y_{i,j}} \text{ , } \forall j \in V \\ \{\}
+        \label{vertez}
     \end{equation}
 
     Onde,
@@ -143,9 +146,11 @@
 
         \item \ref{capacity} impede que se aloque mais itens que a capacidade do caminhão permite.
 
-        \item e a restrição \ref{belong} é a formulação que garante que nosso $X$ trabalhe como um acumulador de pesos, e guarda o valor do peso do caminhão de $s$ até o vértice $j$.
+        \item e a restrição \ref{belong} é a formulação que garante que nosso $F$ trabalhe como um acumulador de pesos das arestas, e guarda o valor do peso do caminhão de $s$ até o vértice $j$.
 
-        \item e por fim \ref{ps} faz com que o peso do caminhão comece no primeiro vértice.
+        \item \ref{ps} faz com que o peso do caminhão comece zerado no primeiro vértice.
+
+        \item e por fim \ref{vertez} faz com que um vértice pertença a solução, se existe uma aresta que incide nele.
 
     Note que, como \ref{s} e \ref{t} garantem o começo e fim do caminho, junto com a restrição \ref{no-cicle}, elas garantem a conectividade do caminho de $s$ a $t$.
 

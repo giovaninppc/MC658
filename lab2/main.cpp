@@ -76,7 +76,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Create PLI Env
-    GRBVar x[nnodes];          // Weight Accumulator
+    GRBVar x[nnodes];          // Vertexes
+    GRBVar f[nnodes][nnodes];  // Weight Accumulator
     GRBVar y[nnodes][nnodes];  // Edges
 
     try {
@@ -86,11 +87,13 @@ int main(int argc, char *argv[]) {
         GRBModel model = GRBModel(env);
 
         // ------- Create GRB Variables
+        // x \in {0,1} | y \in {0,1} | f \in Z”
         for (int i = 0; i < nnodes; i++) {
-            x[i] = model.addVar(0.0, 1000000, 0.0, GRB_INTEGER, "X-" + std::to_string(i));
+            x[i] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "X-" + std::to_string(i));
 
             for (int j = 0; j < nnodes; j++) {
                 y[i][j] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "Y-" + std::to_string(i) + "-" + std::to_string(j));
+                f[i][j] = model.addVar(0.0, INT_MAX, 0.0, GRB_INTEGER, "F-" + std::to_string(i) + "-" + std::to_string(j));
             }
         }
 
@@ -99,9 +102,9 @@ int main(int argc, char *argv[]) {
         // Income value
         GRBQuadExpr objective = 0;
         for (int i = 0; i < nnodes; i++) {
-            objective += x[i] * nodes[i].itemValue;              // Sum collected items
+            objective += x[i] * nodes[i].itemValue;                // Sum collected items
             for (int j = 0; j < nnodes; j++) {
-                objective -= (P + x[i]) * y[i][j] * edges[i][j]; // Subtract edge transport cost
+                objective -= (f[i][j] + P * y[i][j]) * edges[i][j]; // Subtract edge transport cost
             }
         }
 
@@ -152,42 +155,48 @@ int main(int argc, char *argv[]) {
             }
 
             model.addConstr(outEdges, GRB_LESS_EQUAL, 1,  "Node " + std::to_string(i) + " can have max 1 edge in");
-            model.addConstr(inEdges, GRB_LESS_EQUAL, 1,  "Node " + std::to_string(i) + " can have max 1 edge out");
+            // model.addConstr(inEdges, GRB_LESS_EQUAL, 1,  "Node " + std::to_string(i) + " can have max 1 edge out"); -- redundant
             model.addConstr(inEdges, GRB_EQUAL, outEdges, "Node " + std::to_string(i) + " must have the same number of edges in and out");
         }
 
         // Weight restrictions - eh aqui q o filho chora e a mae nao ve
 
-        // Xs == P
-        GRBLinExpr XS = x[s];
-        model.addConstr(XS, GRB_EQUAL, P, "Xs is P");
-
         // Each vertex cost
-        for (int j = 0; j < nnodes; j++) {
-            GRBLinExpr nodeWeight = 0;
+        for (int i = 0; i < nnodes; i++) {
+            GRBLinExpr edgeWeightIn = 0;
+            GRBLinExpr edgeWeightOut = 0;
 
-            if (j == s) { continue; }
-
-            for (int i = 0; i < nnodes; i++) {
-                nodeWeight += (y[i][j] * nodes[j].itemWeight) + x[i];
+            for (int j = 0; j < nnodes; j++) {
+                edgeWeightOut += f[i][j];
+                edgeWeightIn += f[j][i];
             }
 
-            GRBLinExpr item = x[j];
-            model.addConstr(item, GRB_GREATER_EQUAL, nodeWeight, "Node" + std::to_string(j) + " has weight bigger than the edge that reaches it");
+            model.addConstr(edgeWeightOut, GRB_EQUAL, edgeWeightIn + x[i] * nodes[i].itemWeight,  "Node " + std::to_string(i) + " edge out weight");
         }
 
         // Truck capacity restriction
         GRBLinExpr itemsBeingCarried = 0;
         itemsBeingCarried += P;
         for (int i = 0; i < nnodes; i++) {
-            GRBLinExpr nodeCost = 0;
-            for (int j = 0; j < nnodes; j++) {
-                nodeCost += y[j][i];
-            }
-            nodeCost *= nodes[i].itemWeight;
-            itemsBeingCarried += nodeCost;
+            itemsBeingCarried += x[i] * nodes[i].itemWeight;
         }
         model.addConstr(itemsBeingCarried, GRB_LESS_EQUAL, capacity, "Truck capacity");
+
+        // Node value
+        for (int i = 0; i < nnodes; i++) {
+
+            if (i == s || i == t) { continue; }
+
+            GRBLinExpr nodeValue = 0;
+            for (int j = 0; j < nnodes; j++) {
+                nodeValue += y[j][i];
+            }
+
+            model.addConstr(x[i], GRB_EQUAL, nodeValue,  "Node " + std::to_string(i) + " exists");
+        }
+
+        model.addConstr(x[s], GRB_EQUAL, 1,  "Node s");
+        model.addConstr(x[t], GRB_EQUAL, 1,  "Node t");
 
         // -------- Optimize model
         model.optimize();
